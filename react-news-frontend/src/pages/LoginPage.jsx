@@ -1,62 +1,103 @@
 
 import { useState } from "react";
 
-function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+function LoginPage({ onLogin }) {
+    const [username, setUsername] = useState("admin");
+    const [password, setPassword] = useState("123456");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-  function handleLogin(event) {
-    event.preventDefault();
+    async function handleSubmit(event) {
+        event.preventDefault();
 
-    if (!username.trim() || !password.trim()) {
-      alert("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
-      return;
+        setError("");
+        setLoading(true);
+
+        try {
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    username: username.trim(),
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                setError(
+                    data.message || "Tên đăng nhập hoặc mật khẩu không đúng."
+                );
+                return;
+            }
+
+            if (typeof onLogin === "function") {
+                onLogin(data.user);
+            } else {
+                setError("Thiếu hàm xử lý đăng nhập trong App.jsx.");
+            }
+        } catch (error) {
+            console.error("Lỗi đăng nhập:", error);
+            setError(
+                "Không thể kết nối máy chủ. Hãy kiểm tra backend và tải lại trang."
+            );
+        } finally {
+            setLoading(false);
+        }
     }
 
-    alert("Đăng nhập với tài khoản: " + username);
-  }
+    return (
+        <main className="login-container">
+            <form className="login-form" onSubmit={handleSubmit}>
+                <h1>Đăng nhập</h1>
+                <p>React News Management</p>
 
-  return (
-    <div>
-      <h2>Đăng nhập</h2>
+                <label htmlFor="username">
+                    Tên đăng nhập
+                </label>
 
-      <form onSubmit={handleLogin}>
-        <div>
-          <label htmlFor="username">Tên đăng nhập</label>
-          <input
-            id="username"
-            type="text"
-            value={username}
-            onChange={(event) =>
-              setUsername(event.target.value)
-            }
-            required
-          />
-        </div>
+                <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    placeholder="Nhập tên đăng nhập"
+                    autoComplete="username"
+                    required
+                />
 
-        <br />
+                <label htmlFor="password">
+                    Mật khẩu
+                </label>
 
-        <div>
-          <label htmlFor="password">Mật khẩu</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) =>
-              setPassword(event.target.value)
-            }
-            required
-          />
-        </div>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Nhập mật khẩu"
+                    autoComplete="current-password"
+                    required
+                />
 
-        <br />
+                {error && (
+                    <p className="login-error" role="alert">
+                        {error}
+                    </p>
+                )}
 
-        <button type="submit">Đăng nhập</button>
-      </form>
-
-      <p>Đây là giao diện đăng nhập demo.</p>
-    </div>
-  );
+                <button type="submit" disabled={loading}>
+                    {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                </button>
+            </form>
+        </main>
+    );
 }
 
 export default LoginPage;

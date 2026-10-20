@@ -1,27 +1,28 @@
-
 import { useState } from "react";
 
 function PostForm({ initialPost, onSubmit, buttonText }) {
-  const [title, setTitle] = useState(
-    initialPost ? initialPost.title : ""
-  );
+  const [title, setTitle] = useState(initialPost?.title || "");
+  const [content, setContent] = useState(initialPost?.content || "");
+  const [submitting, setSubmitting] = useState(false);
 
-  const [description, setDescription] = useState(
-    initialPost ? initialPost.description : ""
-  );
-
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!title.trim() || !description.trim()) {
+    if (!title.trim() || !content.trim()) {
       alert("Vui lòng nhập đầy đủ tiêu đề và nội dung!");
       return;
     }
 
-    onSubmit({
-      title: title.trim(),
-      description: description.trim()
-    });
+    setSubmitting(true);
+
+    try {
+      await onSubmit({
+        title: title.trim(),
+        content: content.trim()
+      });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -37,22 +38,20 @@ function PostForm({ initialPost, onSubmit, buttonText }) {
         />
       </div>
 
-      <br />
-
       <div>
-        <label htmlFor="description">Nội dung</label>
+        <label htmlFor="content">Nội dung</label>
         <textarea
-          id="description"
+          id="content"
           rows="5"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
           required
         />
       </div>
 
-      <br />
-
-      <button type="submit">{buttonText}</button>
+      <button type="submit" disabled={submitting}>
+        {submitting ? "Đang xử lý..." : buttonText}
+      </button>
     </form>
   );
 }

@@ -1,14 +1,9 @@
-
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import PostForm from "../components/PostForm";
 
-function EditPostPage({ posts, onUpdatePost }) {
+function EditPostPage({ posts, onUpdate }) {
   const { id } = useParams();
-  const navigate = useNavigate();
-
-  const post = posts.find(
-    (item) => item.id === Number(id)
-  );
+  const post = posts.find((item) => String(item.id) === String(id));
 
   if (!post) {
     return (
@@ -19,25 +14,13 @@ function EditPostPage({ posts, onUpdatePost }) {
     );
   }
 
-  function handleUpdate(postData) {
-    const updatedPost = {
-      id: post.id,
-      title: postData.title,
-      description: postData.description
-    };
-
-    onUpdatePost(updatedPost);
-    navigate("/posts");
-  }
-
   return (
     <div>
       <h2>Sửa bài viết</h2>
-
       <PostForm
         key={post.id}
         initialPost={post}
-        onSubmit={handleUpdate}
+        onSubmit={(postData) => onUpdate(id, postData)}
         buttonText="Cập nhật"
       />
     </div>
